@@ -94,5 +94,6 @@ Configurar Budget + alerta em 80%/100% do crédito no Cost Management antes de p
 - [x] Bicep da Fase 1 escrito (`infra/main.bicep`, `modules/storage.bicep`, `modules/key-vault.bicep`)
 - [x] Workflows de CI/CD escritos (pendente configurar secrets/vars no GitHub)
 - [x] Deploy do Bicep aplicado (Resource Group `apolo-rg`, Storage Account + Key Vault criados via `az login` local)
+- [x] Budget de US$200 com alerta em 80%/100% configurado na subscription (`apolo-trial-budget`)
 - [ ] Spike de conectividade ADLS↔Databricks executado e documentado
 - [ ] Fases 2-6 do roadmap
