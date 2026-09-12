@@ -1,0 +1,7 @@
+# Bicep/ARM build output
+infra/**/*.json.bak
+*.bicep.json
+
+# OS/editor
+.DS_Store
+.vscode/
