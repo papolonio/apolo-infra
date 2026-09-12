@@ -74,8 +74,8 @@ Configurar Budget + alerta em 80%/100% do crédito no Cost Management antes de p
 
 ## Roadmap faseado
 
-1. **IaC básica + ADLS + spike de conectividade** (bloqueante). `infra/main.bicep` provisiona RG/ADLS/Key Vault; testar hipótese A e B no workspace real; documentar em `spikes/README.md`.
-   *Pronto quando:* existe um caminho comprovado de arquivo indo do ADLS até uma tabela Delta em `bronze`.
+1. **IaC básica + ADLS + spike de conectividade** (bloqueante). ✅ Concluída — `infra/main.bicep` provisionou RG/ADLS/Key Vault; Hipótese A validada no workspace real; documentado em `spikes/README.md`.
+   *Pronto quando:* existe um caminho comprovado de arquivo indo do ADLS até uma tabela Delta em `bronze`. ✅
 2. **ADF parametrizado**. Pipeline genérico com dataset parametrizado, linked services via Key Vault + Managed Identity.
    *Pronto quando:* um pipeline processa múltiplos arquivos fictícios só variando parâmetro.
 3. **Ponte ADF→Databricks em produção**. Implementa a hipótese vencedora da Fase 1 como Activity real no pipeline.
@@ -95,5 +95,5 @@ Configurar Budget + alerta em 80%/100% do crédito no Cost Management antes de p
 - [x] Workflows de CI/CD escritos (pendente configurar secrets/vars no GitHub)
 - [x] Deploy do Bicep aplicado (Resource Group `apolo-rg`, Storage Account + Key Vault criados via `az login` local)
 - [x] Budget de US$200 com alerta em 80%/100% configurado na subscription (`apolo-trial-budget`)
-- [ ] Spike de conectividade ADLS↔Databricks executado e documentado
+- [x] Spike de conectividade ADLS↔Databricks executado e documentado (Hipótese A confirmada — ver `spikes/README.md`)
 - [ ] Fases 2-6 do roadmap
