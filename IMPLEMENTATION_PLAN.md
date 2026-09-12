@@ -17,7 +17,7 @@ Por governança, o projeto é dividido em 3 repositórios (cada ferramenta com c
 | # | Camada | Alvo Azure | Peso portfólio | Prioridade |
 |---|--------|------------|-----------------|------------|
 | 1 | Ingestão | ADF com pipeline parametrizado (dataset genérico + linked service por ambiente), versionado via Git integration do ADF Studio no repo `apolo-adf` | Alto | **P1** |
-| 2 | Armazenamento | ADLS Gen2, container `bronze-raw` (landing real). Prata/ouro continuam vivendo nos catalogs Unity Catalog do Databricks | Médio-alto | **P1** |
+| 2 | Armazenamento | ADLS Gen2, container `landing` (pouso do dado bruto vindo do ADF). Prata/ouro continuam vivendo nos catalogs Unity Catalog do Databricks | Médio-alto | **P1** |
 | 3 | Ponte ADLS→Databricks | Ver "Lacuna técnica" abaixo — resolvida via spike, não assumida | Muito alto (diferencial técnico real) | **P1 (como spike)** |
 | 4 | Processamento | Databricks Free Edition serverless + Unity Catalog (já existe do lado Databricks) | Alto, baixo esforço | P2 |
 | 5 | Orquestração | ADF disparando dbt no Free Edition via SQL Warehouse | Alto | P2 |
@@ -38,7 +38,7 @@ Hipótese de maior confiança, por inverter a direção do tráfego: **ADF empur
 [Fontes fictícias/CSV]
       │  ADF Copy Activity (parametrizado)
       ▼
-[ADLS Gen2 — container "bronze-raw"]        (Azure)
+[ADLS Gen2 — container "landing"]        (Azure)
       │
       │  PONTE — decidida no spike (Fase 1):
       │   A) ADF Web Activity → Databricks Files API → Volume gerenciado UC (catalog bronze)
@@ -93,6 +93,6 @@ Configurar Budget + alerta em 80%/100% do crédito no Cost Management antes de p
 - [x] Projeto dbt migrado para o repo `apolo-dbt` (sem `seeds/`, renomeado de `pratica_dbt`)
 - [x] Bicep da Fase 1 escrito (`infra/main.bicep`, `modules/storage.bicep`, `modules/key-vault.bicep`)
 - [x] Workflows de CI/CD escritos (pendente configurar secrets/vars no GitHub)
-- [ ] Deploy do Bicep aplicado de fato (depende de `az login` local ou OIDC configurado)
+- [x] Deploy do Bicep aplicado (Resource Group `apolo-rg`, Storage Account + Key Vault criados via `az login` local)
 - [ ] Spike de conectividade ADLS↔Databricks executado e documentado
 - [ ] Fases 2-6 do roadmap

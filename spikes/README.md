@@ -4,7 +4,7 @@ Registro dos experimentos de validação feitos antes de comprometer a arquitetu
 
 ## Pendente: ponte ADLS Gen2 → Databricks Free Edition
 
-**Pergunta a responder:** como dados aterrissados no ADLS Gen2 (container `bronze-raw`) chegam a uma tabela Delta no catalog `bronze` do Databricks Free Edition, já que o Free Edition não permite registrar a storage account como external location/volume externo?
+**Pergunta a responder:** como dados aterrissados no ADLS Gen2 (container `landing`) chegam a uma tabela Delta no catalog `bronze` do Databricks Free Edition, já que o Free Edition não permite registrar a storage account como external location/volume externo?
 
 **Hipóteses a testar** (ver `IMPLEMENTATION_PLAN.md` na raiz do repo para o racional completo):
 

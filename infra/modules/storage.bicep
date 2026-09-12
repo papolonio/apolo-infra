@@ -4,8 +4,8 @@ param storageAccountName string
 @description('Regiao de deploy')
 param location string
 
-@description('Nome do container que recebe o landing raw vindo do ADF (camada bronze do lado Azure)')
-param bronzeContainerName string = 'bronze-raw'
+@description('Nome do container onde o ADF pousa os arquivos brutos, antes da ponte para o Databricks')
+param landingContainerName string = 'landing'
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: storageAccountName
@@ -26,9 +26,9 @@ resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-01-01'
   name: 'default'
 }
 
-resource bronzeContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+resource landingContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
   parent: blobService
-  name: bronzeContainerName
+  name: landingContainerName
   properties: {
     publicAccess: 'None'
   }
