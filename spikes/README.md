@@ -42,3 +42,13 @@ Isso é diferente do que acontece num ambiente de **Azure Databricks pago com Un
 Ao provisionar a Function App via Bicep, o plano **Consumption clássico (SKU `Y1`)** falhou com `SubscriptionIsOverQuotaForSku` — `Current Limit (Y1 VMs): 0`. Testei em duas regiões diferentes (`brazilsouth` e `eastus2`) e o erro se repetiu identicamente nas duas, confirmando que é uma **restrição no nível da subscription** (não da região): contas Free Trial novas nascem com cota zero de "Dynamic VMs" por proteção antifraude da Microsoft, e liberar isso normalmente exige um pedido formal de aumento de cota.
 
 **Solução:** testei o plano **Flex Consumption (SKU `FC1`)** — a geração mais nova do hosting serverless de Functions — e ele **não compartilha essa cota**: provisionou de primeira, sem pedido de aumento. Trocamos o Bicep pra usar Flex Consumption em vez do Consumption clássico. Também tem cota sempre gratuita generosa, então não sai do escopo de custo do projeto — só exige uma configuração um pouco diferente (`functionAppConfig` com storage de deployment via Managed Identity, em vez do modelo clássico de `WEBSITE_RUN_FROM_PACKAGE`).
+
+## Databricks Workflows/Jobs funciona no Free Edition (ao contrário do que o README original assumia)
+
+O `README.md` herdado do projeto original afirmava "Sem Databricks Workflows — orquestração da 'Transform Job' é simulada rodando `dbt build` manualmente/local", assumindo que o Free Edition não suporta Jobs agendados. Testei diretamente via API (`POST /api/2.1/jobs/create`) e **funciona**:
+
+1. Criei um job real com uma `dbt_task`, `git_source` apontando pro repositório `apolo-dbt` no GitHub, e `schedule` com cron `0 0 0/3 * * ?` (a cada 3 horas) — sucesso (`job_id` retornado).
+2. A `dbt_task` roda em **compute serverless** (a própria API pediu só um `environment`/`environment_key`, nunca um cluster) — coerente com o resto do Free Edition ser serverless-only.
+3. Testado só a criação (job ficou `PAUSED` e foi apagado logo depois) — a execução real ainda depende de existirem tabelas `bronze.erp_ficticio.*` de verdade (hoje só há arquivos brutos no Volume), que é o que falta resolver na Fase 4.
+
+**Implicação pro roadmap:** a Fase 4 não precisa ser "ADF aciona o SQL Warehouse pra rodar dbt build" — pode ser um **Databricks Job agendado, independente do ADF**, replicando o padrão de "Transform Job" comum em ambientes reais (a orquestração de ingestão/pousada de dado fica com o ADF; a orquestração de transformação fica inteiramente do lado do Databricks, no seu próprio ritmo).
