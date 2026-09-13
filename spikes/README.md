@@ -52,3 +52,14 @@ O `README.md` herdado do projeto original afirmava "Sem Databricks Workflows —
 3. Testado só a criação (job ficou `PAUSED` e foi apagado logo depois) — a execução real ainda depende de existirem tabelas `bronze.erp_ficticio.*` de verdade (hoje só há arquivos brutos no Volume), que é o que falta resolver na Fase 4.
 
 **Implicação pro roadmap:** a Fase 4 não precisa ser "ADF aciona o SQL Warehouse pra rodar dbt build" — pode ser um **Databricks Job agendado, independente do ADF**, replicando o padrão de "Transform Job" comum em ambientes reais (a orquestração de ingestão/pousada de dado fica com o ADF; a orquestração de transformação fica inteiramente do lado do Databricks, no seu próprio ritmo).
+
+## Fase 4 em produção: dois achados reais ao rodar o Job de verdade (não só criar)
+
+Depois de decidir por dois Jobs (ver `IMPLEMENTATION_PLAN.md` — `transform_job_geral` a cada 3h, `transform_job_frequente` a cada 30min, separados por tag de tier), a primeira execução real (`run-now`, não só criação) revelou dois problemas de configuração, nenhum deles bloqueio de plataforma:
+
+1. **`environment.spec.client: "1"` não é suportado neste workspace** — erro `Invalid platform channel Client-1`. Troquei para `"client": "2"` e resolveu. A versão do "client" do ambiente serverless aparentemente varia por workspace/geração da conta.
+2. **O `dbt_task` do Databricks Jobs ignora o `profiles.yml` do repositório e gera seu próprio profile temporário** — confirmado rodando `dbt debug` dentro do Job: `Using profiles dir at /tmp/tmp-dbt-run-.../profiles`, com `catalog: hive_metastore` e `schema: default` (nada a ver com o `catalog: "prata"` do nosso `profiles.yml`). Como o Hive Metastore está desabilitado por política nesta conta (`UC_HIVE_METASTORE_DISABLED_EXCEPTION`), qualquer conexão que tente usar esse catalog como default falha antes mesmo de rodar qualquer SQL — mesmo com todas as referências do nosso código totalmente qualificadas (`bronze.erp_ficticio.tabela`), a própria abertura da conexão já falhava.
+
+**Solução:** o `dbt_task` aceita `catalog`/`schema` como campos próprios (fora do `profiles.yml`) — adicionei `"catalog": "prata", "schema": "dev_pedro"` na definição de cada Job (`databricks/jobs/*.json`), forçando o profile auto-gerado a nascer com um catalog válido do Unity Catalog em vez do Hive Metastore legado. Resolveu nas duas jobs.
+
+**Por que isso importa:** é um lembrete de que orquestradores que "geram profile automaticamente" (comum em ferramentas gerenciadas) podem silenciosamente ignorar configuração que só existe no seu projeto — sempre validar com uma execução real (`run-now`/`dbt debug`), não só a criação do recurso.

@@ -80,8 +80,10 @@ Configurar Budget + alerta em 80%/100% do crédito no Cost Management antes de p
    *Pronto quando:* um pipeline processa múltiplos arquivos fictícios só variando parâmetro. ✅ (rodada real via API, `status: Succeeded`, 6 arquivos copiados de `source/` para `landing/`)
 3. **Ponte ADF→Databricks em produção**. ✅ Concluída — Azure Function (`func-dbtazure-dev-cshdut3x`, Flex Consumption, `functions/bridge_to_databricks/`) provisionada e implantada, chamada pelo ADF (`ls_function_bridge`, chave via `ls_keyvault_apolo`) dentro do próprio ForEach, logo após o Copy data1.
    *Pronto quando:* rodar o pipeline do ADF deixa dado novo em `bronze` sem passo manual. ✅ (6 arquivos confirmados no Volume `bronze.landing.raw_files` via `LIST`, tamanhos batendo com os originais)
-4. **dbt disparado pelo ADF**. ADF aciona o SQL Warehouse para rodar `dbt build`.
-   *Pronto quando:* o pipeline ponta-a-ponta atualiza prata/ouro a partir de bronze.
+4. **Transformação disparada pelo Databricks, não pelo ADF**. ✅ Concluída — decisão revista em conversa: em vez de ADF acionar o SQL Warehouse, dois **Databricks Jobs agendados e independentes** (padrão real de "Transform Job"), separados por tag de tier no dbt (`tier_padrao`/`tier_frequente`), cada um com uma `dbt_task` que primeiro materializa `bronze.erp_ficticio.*` a partir do Volume (`dbt run-operation materialize_bronze_*`, ver `apolo-dbt/macros/ingestion/`) e depois roda `dbt build --select tag:*`. Definições versionadas em `databricks/jobs/*.json` (aplicadas via `apply_jobs.py`, já que não há tooling de Asset Bundles instalado). CI do `apolo-dbt` valida que todo model tem exatamente uma tag de tier (`scripts/validate_tiers.py`).
+   - `transform_job_geral`: cron a cada 3h, `tier_padrao` (clientes/produtos → dims).
+   - `transform_job_frequente`: cron a cada 30min (offset 15), `tier_frequente` (pedidos → fato de vendas).
+   *Pronto quando:* o pipeline ponta-a-ponta atualiza prata/ouro a partir de bronze. ✅ (`run-now` real nos dois Jobs, `result_state: SUCCESS`, 25 checks no geral + 16 checks no frequente, todos passando)
 5. **CI/CD**. `.github/workflows/deploy-infra.yml` (OIDC, neste repo) e `ci-dbt.yml` (dbt build em PR, no repo `apolo-dbt`) — já escritos, faltando os secrets/vars reais no GitHub.
    *Pronto quando:* PR que quebra teste dbt falha o CI antes do merge.
 6. **Observabilidade**. Diagnostic settings do ADF → Log Analytics, alerta de falha de pipeline.
@@ -98,4 +100,5 @@ Configurar Budget + alerta em 80%/100% do crédito no Cost Management antes de p
 - [x] Spike de conectividade ADLS↔Databricks executado e documentado (Hipótese A confirmada — ver `spikes/README.md`)
 - [x] Fase 2 concluída: ADF parametrizado com ForEach, rodando de verdade contra `source`/`landing` (ver nota sobre bug de Publish do ADF Studio no `apolo-adf/README.md`)
 - [x] Fase 3 concluída: Azure Function (Flex Consumption) fazendo a ponte real `landing` → Volume do Databricks, chamada pelo ADF dentro do ForEach
-- [ ] Fases 3-6 do roadmap
+- [x] Fase 4 concluída: `transform_job_geral` + `transform_job_frequente` (Databricks Jobs agendados, separados por tier) rodando de verdade via `run-now`, ambos `SUCCESS`
+- [ ] Fases 5-6 do roadmap

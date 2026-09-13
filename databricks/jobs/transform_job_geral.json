@@ -15,10 +15,16 @@
     {
       "task_key": "run_dbt_tier_padrao",
       "dbt_task": {
-        "commands": ["dbt deps", "dbt run-operation materialize_bronze_padrao", "dbt build --select tag:tier_padrao"],
+        "commands": [
+          "dbt deps",
+          "dbt run-operation materialize_bronze_padrao",
+          "dbt build --select tag:tier_padrao"
+        ],
         "project_directory": "",
         "warehouse_id": "5bd2fac3d33e9e86",
-        "source": "GIT"
+        "source": "GIT",
+        "catalog": "prata",
+        "schema": "dev_pedro"
       },
       "environment_key": "dbt_env"
     }
@@ -27,8 +33,10 @@
     {
       "environment_key": "dbt_env",
       "spec": {
-        "client": "1",
-        "dependencies": ["dbt-databricks"]
+        "client": "2",
+        "dependencies": [
+          "dbt-databricks==1.12.5"
+        ]
       }
     }
   ]
