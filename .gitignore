@@ -2,6 +2,12 @@
 infra/**/*.json.bak
 *.bicep.json
 
+# Azure Functions
+functions/**/local.settings.json
+functions/**/.venv/
+functions/**/__pycache__/
+functions/**/*.zip
+
 # OS/editor
 .DS_Store
 .vscode/

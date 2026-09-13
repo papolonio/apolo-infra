@@ -78,8 +78,8 @@ Configurar Budget + alerta em 80%/100% do crédito no Cost Management antes de p
    *Pronto quando:* existe um caminho comprovado de arquivo indo do ADLS até uma tabela Delta em `bronze`. ✅
 2. **ADF parametrizado**. ✅ Concluída — ADF provisionado via Bicep com Managed Identity (`Storage Blob Data Contributor` no ADLS, `Key Vault Secrets User` no Key Vault); segredos do Databricks guardados no Key Vault; Git integration conectada ao repo `apolo-adf`; `ls_adls_apolo` (linked service via Managed Identity), `ds_source`/`ds_landing` (datasets Binary parametrizados por `folderPath`/`fileName`) e `pl_copy_source_to_landing` (pipeline com ForEach) criados na UI do ADF Studio. Container `source` populado com 6 arquivos fictícios (3 tabelas × CSV/Parquet) para simular a fonte até a decisão de Postgres/SQL Server/API.
    *Pronto quando:* um pipeline processa múltiplos arquivos fictícios só variando parâmetro. ✅ (rodada real via API, `status: Succeeded`, 6 arquivos copiados de `source/` para `landing/`)
-3. **Ponte ADF→Databricks em produção**. Implementa a hipótese vencedora da Fase 1 como Activity real no pipeline.
-   *Pronto quando:* rodar o pipeline do ADF deixa dado novo em `bronze` sem passo manual.
+3. **Ponte ADF→Databricks em produção**. ✅ Concluída — Azure Function (`func-dbtazure-dev-cshdut3x`, Flex Consumption, `functions/bridge_to_databricks/`) provisionada e implantada, chamada pelo ADF (`ls_function_bridge`, chave via `ls_keyvault_apolo`) dentro do próprio ForEach, logo após o Copy data1.
+   *Pronto quando:* rodar o pipeline do ADF deixa dado novo em `bronze` sem passo manual. ✅ (6 arquivos confirmados no Volume `bronze.landing.raw_files` via `LIST`, tamanhos batendo com os originais)
 4. **dbt disparado pelo ADF**. ADF aciona o SQL Warehouse para rodar `dbt build`.
    *Pronto quando:* o pipeline ponta-a-ponta atualiza prata/ouro a partir de bronze.
 5. **CI/CD**. `.github/workflows/deploy-infra.yml` (OIDC, neste repo) e `ci-dbt.yml` (dbt build em PR, no repo `apolo-dbt`) — já escritos, faltando os secrets/vars reais no GitHub.
@@ -97,4 +97,5 @@ Configurar Budget + alerta em 80%/100% do crédito no Cost Management antes de p
 - [x] Budget de US$200 com alerta em 80%/100% configurado na subscription (`apolo-trial-budget`)
 - [x] Spike de conectividade ADLS↔Databricks executado e documentado (Hipótese A confirmada — ver `spikes/README.md`)
 - [x] Fase 2 concluída: ADF parametrizado com ForEach, rodando de verdade contra `source`/`landing` (ver nota sobre bug de Publish do ADF Studio no `apolo-adf/README.md`)
+- [x] Fase 3 concluída: Azure Function (Flex Consumption) fazendo a ponte real `landing` → Volume do Databricks, chamada pelo ADF dentro do ForEach
 - [ ] Fases 3-6 do roadmap
