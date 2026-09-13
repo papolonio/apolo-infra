@@ -84,8 +84,8 @@ Configurar Budget + alerta em 80%/100% do crédito no Cost Management antes de p
    - `transform_job_geral`: cron a cada 3h, `tier_padrao` (clientes/produtos → dims).
    - `transform_job_frequente`: cron a cada 30min (offset 15), `tier_frequente` (pedidos → fato de vendas).
    *Pronto quando:* o pipeline ponta-a-ponta atualiza prata/ouro a partir de bronze. ✅ (`run-now` real nos dois Jobs, `result_state: SUCCESS`, 25 checks no geral + 16 checks no frequente, todos passando)
-5. **CI/CD**. `.github/workflows/deploy-infra.yml` (OIDC, neste repo) e `ci-dbt.yml` (dbt build em PR, no repo `apolo-dbt`) — já escritos, faltando os secrets/vars reais no GitHub.
-   *Pronto quando:* PR que quebra teste dbt falha o CI antes do merge.
+5. **CI/CD**. ✅ Concluída — App Registration (`apolo-infra-github-oidc`) + Federated Credential (OIDC, sem secret estático) com `Contributor` + `User Access Administrator` escopados só ao `apolo-rg`; variáveis `AZURE_CLIENT_ID`/`AZURE_TENANT_ID`/`AZURE_SUBSCRIPTION_ID`/`AZURE_RESOURCE_GROUP` configuradas no `apolo-infra`; secrets `DATABRICKS_HOST`/`DATABRICKS_HTTP_PATH`/`DATABRICKS_TOKEN` configurados no `apolo-dbt`.
+   *Pronto quando:* PR que quebra teste dbt falha o CI antes do merge. ✅ (`deploy-infra.yml` rodou via `workflow_dispatch` com sucesso; `ci-dbt.yml` validado via PR de teste, também com sucesso — ver achado do subject OIDC em `spikes/README.md`)
 6. **Observabilidade**. Diagnostic settings do ADF → Log Analytics, alerta de falha de pipeline.
    *Pronto quando:* falha proposital de pipeline gera alerta visível.
 
@@ -101,4 +101,5 @@ Configurar Budget + alerta em 80%/100% do crédito no Cost Management antes de p
 - [x] Fase 2 concluída: ADF parametrizado com ForEach, rodando de verdade contra `source`/`landing` (ver nota sobre bug de Publish do ADF Studio no `apolo-adf/README.md`)
 - [x] Fase 3 concluída: Azure Function (Flex Consumption) fazendo a ponte real `landing` → Volume do Databricks, chamada pelo ADF dentro do ForEach
 - [x] Fase 4 concluída: `transform_job_geral` + `transform_job_frequente` (Databricks Jobs agendados, separados por tier) rodando de verdade via `run-now`, ambos `SUCCESS`
-- [ ] Fases 5-6 do roadmap
+- [x] Fase 5 concluída: CI/CD com OIDC (sem secret estático) validado via `workflow_dispatch`, e `ci-dbt.yml` validado via PR real
+- [ ] Fase 6 do roadmap (Observabilidade)

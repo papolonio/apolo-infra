@@ -63,3 +63,11 @@ Depois de decidir por dois Jobs (ver `IMPLEMENTATION_PLAN.md` — `transform_job
 **Solução:** o `dbt_task` aceita `catalog`/`schema` como campos próprios (fora do `profiles.yml`) — adicionei `"catalog": "prata", "schema": "dev_pedro"` na definição de cada Job (`databricks/jobs/*.json`), forçando o profile auto-gerado a nascer com um catalog válido do Unity Catalog em vez do Hive Metastore legado. Resolveu nas duas jobs.
 
 **Por que isso importa:** é um lembrete de que orquestradores que "geram profile automaticamente" (comum em ferramentas gerenciadas) podem silenciosamente ignorar configuração que só existe no seu projeto — sempre validar com uma execução real (`run-now`/`dbt debug`), não só a criação do recurso.
+
+## Fase 5: subject do token OIDC do GitHub não é o formato "padrão" documentado
+
+Ao configurar a Federated Identity Credential do Azure AD pra login OIDC do `deploy-infra.yml` (sem secret estático), criei a credencial com o subject padrão documentado pela Microsoft: `repo:papolonio/apolo-infra:ref:refs/heads/main`. O primeiro `workflow_dispatch` falhou com `AADSTS700213: No matching federated identity record found`, e a mensagem de erro revelou o subject **real** que o GitHub enviou: `repo:papolonio@174207517/apolo-infra@1367451415:ref:refs/heads/main` — com IDs numéricos internos da conta/repositório embutidos, não presentes na documentação padrão.
+
+**Solução:** adicionei uma segunda Federated Credential com o subject exato revelado pelo erro (`apolo-infra-main-exact`). Funcionou de primeira depois disso.
+
+**Por que isso importa:** ao configurar OIDC do zero, não assuma o formato do subject só pela documentação — dispare uma vez esperando falhar, leia a mensagem de erro (ela mostra o subject real enviado), e crie a credencial com esse valor exato. Mais rápido que tentar adivinhar variações.
