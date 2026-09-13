@@ -24,4 +24,15 @@ Teste executado direto contra a SQL Statement API e a Files API do workspace (si
 
 **Achado extra relevante:** o SQL Warehouse do Free Edition estava **suspenso por inatividade** (`state: STOPPED`, e uma primeira tentativa de `POST /start` retornou `DENY_NEW_AND_EXISTING_RESOURCES` / `INACTIVE`). Precisou de um login manual na UI do workspace para reativar antes da API voltar a aceitar comandos. Isso é uma limitação de plataforma a considerar no roadmap: se o pipeline do ADF ficar muito tempo sem rodar, a primeira execução depois de um período de inatividade pode falhar até alguém reativar o workspace manualmente pela UI — vale monitorar isso na Fase 6 (Observabilidade).
 
-**Decisão:** a Fase 3 do roadmap (ponte ADF→Databricks em produção) implementa a Hipótese A — ADF fazendo Web Activity contra a Files API do Databricks, gravando no Volume `bronze.landing.raw_files`, seguido de um `read_files`/`COPY INTO` (via dbt ou um passo SQL do próprio pipeline) pra materializar a tabela Delta. A Hipótese B (COPY INTO direto do ADLS) não foi testada, já que A já resolveu o problema com confiança — não há necessidade de validar uma segunda rota.
+**Decisão:** a Fase 3 do roadmap (ponte ADF→Databricks em produção) implementa a Hipótese A. A Hipótese B (COPY INTO direto do ADLS) não foi testada, já que A já resolveu o problema com confiança — não há necessidade de validar uma segunda rota.
+
+## Por que isso não é assim tão simples no ADF nativo (e por que é diferente de um ambiente pago)
+
+Ao desenhar a Activity real do pipeline pra Fase 3, descobri que os conectores nativos do ADF não resolvem essa ponte de forma direta:
+
+- **Web Activity** aceita corpo de requisição só como texto pequeno (pensado pra chamadas de controle/JSON), não é adequado pra enviar o conteúdo binário de um arquivo CSV/Parquet inteiro.
+- **Copy Activity** com destino HTTP **não existe** no ADF — o conector HTTP só é suportado como origem (leitura), nunca como destino (escrita/PUT).
+
+Isso é diferente do que acontece num ambiente de **Azure Databricks pago com Unity Catalog External Location**: nesse caso, o Databricks tem uma conexão direta e de rede irrestrita com a storage account, então basta o ADF depositar o arquivo no ADLS que o Databricks já consegue lê-lo — a "ponte" nem existe como um problema, é automática (é assim que costuma funcionar em ambientes corporativos reais). No Free Edition isso não é possível (rede de saída restrita do compute + sem External Location), então é necessário empurrar o dado ativamente de fora pra dentro.
+
+**Solução adotada:** uma pequena **Azure Function** (Python, plano Consumption) como a peça executora — o ADF a aciona (passando qual arquivo processar), a Function lê o blob do `landing` com a própria Managed Identity e faz o `PUT` na Files API do Databricks, replicando exatamente o teste manual validado nesta seção. Do ponto de vista de quem usa o pipeline, a experiência final é a mesma de um ambiente pago (carga cai no ADF, aparece pouco depois no `bronze`) — a diferença fica só na camada de execução, contornando a limitação real do tier gratuito.
