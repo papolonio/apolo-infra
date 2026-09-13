@@ -13,7 +13,11 @@ param sourceContainerName string = 'source'
 @description('Principal ID da Managed Identity do ADF, para conceder acesso de leitura/escrita no container. Vazio = nenhum acesso concedido.')
 param dataFactoryPrincipalId string = ''
 
+@description('Principal ID da Managed Identity da Function de ponte pro Databricks, para conceder leitura no container landing. Vazio = nenhum acesso concedido.')
+param bridgeFunctionPrincipalId string = ''
+
 var storageBlobDataContributorRoleId = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+var storageBlobDataReaderRoleId = '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: storageAccountName
@@ -56,6 +60,16 @@ resource adfRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' 
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', storageBlobDataContributorRoleId)
     principalId: dataFactoryPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource bridgeFunctionRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(bridgeFunctionPrincipalId)) {
+  name: guid(storageAccount.id, bridgeFunctionPrincipalId, storageBlobDataReaderRoleId)
+  scope: storageAccount
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', storageBlobDataReaderRoleId)
+    principalId: bridgeFunctionPrincipalId
     principalType: 'ServicePrincipal'
   }
 }
