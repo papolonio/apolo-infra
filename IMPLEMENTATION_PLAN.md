@@ -76,8 +76,8 @@ Configurar Budget + alerta em 80%/100% do crédito no Cost Management antes de p
 
 1. **IaC básica + ADLS + spike de conectividade** (bloqueante). ✅ Concluída — `infra/main.bicep` provisionou RG/ADLS/Key Vault; Hipótese A validada no workspace real; documentado em `spikes/README.md`.
    *Pronto quando:* existe um caminho comprovado de arquivo indo do ADLS até uma tabela Delta em `bronze`. ✅
-2. **ADF parametrizado**. 🔄 Em andamento — instância do ADF provisionada via Bicep com Managed Identity, já com `Storage Blob Data Contributor` no ADLS e `Key Vault Secrets User` no Key Vault; segredos do Databricks (`DatabricksHost`/`DatabricksHttpPath`/`DatabricksToken`) guardados no Key Vault. Falta: conectar a Git integration do ADF Studio ao repo `apolo-adf` e criar o pipeline genérico com dataset parametrizado.
-   *Pronto quando:* um pipeline processa múltiplos arquivos fictícios só variando parâmetro.
+2. **ADF parametrizado**. ✅ Concluída — ADF provisionado via Bicep com Managed Identity (`Storage Blob Data Contributor` no ADLS, `Key Vault Secrets User` no Key Vault); segredos do Databricks guardados no Key Vault; Git integration conectada ao repo `apolo-adf`; `ls_adls_apolo` (linked service via Managed Identity), `ds_source`/`ds_landing` (datasets Binary parametrizados por `folderPath`/`fileName`) e `pl_copy_source_to_landing` (pipeline com ForEach) criados na UI do ADF Studio. Container `source` populado com 6 arquivos fictícios (3 tabelas × CSV/Parquet) para simular a fonte até a decisão de Postgres/SQL Server/API.
+   *Pronto quando:* um pipeline processa múltiplos arquivos fictícios só variando parâmetro. ✅ (rodada real via API, `status: Succeeded`, 6 arquivos copiados de `source/` para `landing/`)
 3. **Ponte ADF→Databricks em produção**. Implementa a hipótese vencedora da Fase 1 como Activity real no pipeline.
    *Pronto quando:* rodar o pipeline do ADF deixa dado novo em `bronze` sem passo manual.
 4. **dbt disparado pelo ADF**. ADF aciona o SQL Warehouse para rodar `dbt build`.
@@ -96,4 +96,5 @@ Configurar Budget + alerta em 80%/100% do crédito no Cost Management antes de p
 - [x] Deploy do Bicep aplicado (Resource Group `apolo-rg`, Storage Account + Key Vault criados via `az login` local)
 - [x] Budget de US$200 com alerta em 80%/100% configurado na subscription (`apolo-trial-budget`)
 - [x] Spike de conectividade ADLS↔Databricks executado e documentado (Hipótese A confirmada — ver `spikes/README.md`)
-- [ ] Fases 2-6 do roadmap
+- [x] Fase 2 concluída: ADF parametrizado com ForEach, rodando de verdade contra `source`/`landing` (ver nota sobre bug de Publish do ADF Studio no `apolo-adf/README.md`)
+- [ ] Fases 3-6 do roadmap
