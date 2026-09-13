@@ -76,7 +76,7 @@ Configurar Budget + alerta em 80%/100% do crédito no Cost Management antes de p
 
 1. **IaC básica + ADLS + spike de conectividade** (bloqueante). ✅ Concluída — `infra/main.bicep` provisionou RG/ADLS/Key Vault; Hipótese A validada no workspace real; documentado em `spikes/README.md`.
    *Pronto quando:* existe um caminho comprovado de arquivo indo do ADLS até uma tabela Delta em `bronze`. ✅
-2. **ADF parametrizado**. Pipeline genérico com dataset parametrizado, linked services via Key Vault + Managed Identity.
+2. **ADF parametrizado**. 🔄 Em andamento — instância do ADF provisionada via Bicep com Managed Identity, já com `Storage Blob Data Contributor` no ADLS e `Key Vault Secrets User` no Key Vault; segredos do Databricks (`DatabricksHost`/`DatabricksHttpPath`/`DatabricksToken`) guardados no Key Vault. Falta: conectar a Git integration do ADF Studio ao repo `apolo-adf` e criar o pipeline genérico com dataset parametrizado.
    *Pronto quando:* um pipeline processa múltiplos arquivos fictícios só variando parâmetro.
 3. **Ponte ADF→Databricks em produção**. Implementa a hipótese vencedora da Fase 1 como Activity real no pipeline.
    *Pronto quando:* rodar o pipeline do ADF deixa dado novo em `bronze` sem passo manual.

@@ -7,6 +7,11 @@ param location string
 @description('Tenant ID do Azure AD')
 param tenantId string = subscription().tenantId
 
+@description('Principal ID da Managed Identity do ADF, para conceder leitura de segredos. Vazio = nenhum acesso concedido.')
+param dataFactoryPrincipalId string = ''
+
+var keyVaultSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6'
+
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: keyVaultName
   location: location
@@ -20,6 +25,16 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     enableSoftDelete: true
     softDeleteRetentionInDays: 7
     enablePurgeProtection: true
+  }
+}
+
+resource adfRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(dataFactoryPrincipalId)) {
+  name: guid(keyVault.id, dataFactoryPrincipalId, keyVaultSecretsUserRoleId)
+  scope: keyVault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultSecretsUserRoleId)
+    principalId: dataFactoryPrincipalId
+    principalType: 'ServicePrincipal'
   }
 }
 

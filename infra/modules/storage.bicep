@@ -7,6 +7,11 @@ param location string
 @description('Nome do container onde o ADF pousa os arquivos brutos, antes da ponte para o Databricks')
 param landingContainerName string = 'landing'
 
+@description('Principal ID da Managed Identity do ADF, para conceder acesso de leitura/escrita no container. Vazio = nenhum acesso concedido.')
+param dataFactoryPrincipalId string = ''
+
+var storageBlobDataContributorRoleId = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: storageAccountName
   location: location
@@ -31,6 +36,16 @@ resource landingContainer 'Microsoft.Storage/storageAccounts/blobServices/contai
   name: landingContainerName
   properties: {
     publicAccess: 'None'
+  }
+}
+
+resource adfRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(dataFactoryPrincipalId)) {
+  name: guid(storageAccount.id, dataFactoryPrincipalId, storageBlobDataContributorRoleId)
+  scope: storageAccount
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', storageBlobDataContributorRoleId)
+    principalId: dataFactoryPrincipalId
+    principalType: 'ServicePrincipal'
   }
 }
 
